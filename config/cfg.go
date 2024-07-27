@@ -26,7 +26,7 @@ type DBConfig struct {
 }
 
 type JwtConfig struct {
-	SecretKey string
+	SecretKey []byte
 }
 
 func (cfg *Config) readConfig() error {
@@ -48,7 +48,7 @@ func (cfg *Config) readConfig() error {
 	}
 
 	cfg.JwtConfig = JwtConfig{
-		SecretKey: os.Getenv("SECRET_KEY"),
+		SecretKey: []byte(os.Getenv("SECRET_KEY")),
 	}
 
 	if cfg.DBUser == "" || cfg.DBPass == "" || cfg.DBName == "" || cfg.DBPort == "" || cfg.DBDriver == "" || cfg.ApiPort == "" {

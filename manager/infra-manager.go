@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Ak8388/applikasi-antrian-dokter-gigi-payment-service/config"
+	_ "github.com/lib/pq"
 )
 
 type InfraManager interface {
@@ -24,7 +25,7 @@ func (infra *infraManager) opneConnect() error {
 	db, err := sql.Open("postgres", dsn)
 
 	if err != nil {
-		return errors.New("failed open your database")
+		return errors.New("failed open your database" + err.Error())
 	}
 
 	if err := db.Ping(); err != nil {

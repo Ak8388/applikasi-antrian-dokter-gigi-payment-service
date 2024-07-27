@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -30,7 +31,7 @@ func (am *authMiddleware) JwtVerify(role ...string) gin.HandlerFunc {
 		claims, err := am.jwtUtils.VerfifyToken(payloadToken)
 
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error() + ": unauthorized"})
 			return
 		}
 
@@ -41,6 +42,8 @@ func (am *authMiddleware) JwtVerify(role ...string) gin.HandlerFunc {
 				validateRole = true
 			}
 		}
+
+		fmt.Println("Role Token =", claims["Role"].(string), "Role =", role[0])
 
 		if !validateRole {
 			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "can't akses this page. invalid role"})
