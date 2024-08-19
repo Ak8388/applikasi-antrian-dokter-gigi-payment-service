@@ -58,7 +58,6 @@ func (p *paymentController) trackingPayment(c *gin.Context) {
 	err := p.pyUsecase.TrackingTransactionNotications(trackReq)
 
 	if err != nil {
-		fmt.Println(err.Error())
 		c.JSON(http.StatusOK, gin.H{"Error": err.Error()})
 		return
 	}
@@ -72,7 +71,6 @@ func (p *paymentController) paymentCanceled(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&OrderID); err != nil {
-		fmt.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
 		return
 	}
@@ -80,7 +78,6 @@ func (p *paymentController) paymentCanceled(c *gin.Context) {
 	err := p.pyUsecase.CancelPaymentUser(OrderID.OrderId)
 
 	if err != nil {
-		fmt.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
 		return
 	}

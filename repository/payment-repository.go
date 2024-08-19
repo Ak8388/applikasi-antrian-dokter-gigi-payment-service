@@ -30,6 +30,41 @@ type paymentRepository struct {
 }
 
 func (p *paymentRepository) CustomerPayment(req model.TransModel) (model.PaymentResponse, error) {
+	var dtoValidate dto.ValidatePayment
+	client := &http.Client{}
+
+	dtoValidate = dto.ValidatePayment{
+		DoctorId: req.ItemDetails[0].Id,
+		OpenTime: req.ItemDetails[0].ReservasiTime,
+		Date:     req.ItemDetails[0].ReservasiDate,
+		ToStts:   req.ItemDetails[0].To,
+	}
+
+	dataJsonVal, err := json.Marshal(dtoValidate)
+
+	if err != nil {
+		return model.PaymentResponse{}, err
+	}
+
+	requestVal, errReq1 := http.NewRequest("POST", "http://localhost:8888/api-klinik-gigi-vony-nur-santy/queues/validate", bytes.NewBuffer(dataJsonVal))
+
+	if errReq1 != nil {
+		return model.PaymentResponse{}, errReq1
+	}
+
+	resVal, errRes := client.Do(requestVal)
+
+	if errRes != nil {
+		return model.PaymentResponse{}, errRes
+	}
+
+	defer resVal.Body.Close()
+	body, _ := io.ReadAll(resVal.Body)
+
+	if resVal.StatusCode > 299 {
+		return model.PaymentResponse{}, errors.New(string(body))
+	}
+
 	var qry string
 	tx, err := p.db.Begin()
 
@@ -48,7 +83,6 @@ func (p *paymentRepository) CustomerPayment(req model.TransModel) (model.Payment
 			OrderID: req.TransactionDetails.OrderID,
 		},
 	}
-	client := &http.Client{}
 
 	dataJson, err := json.Marshal(req)
 
@@ -73,7 +107,7 @@ func (p *paymentRepository) CustomerPayment(req model.TransModel) (model.Payment
 	}
 
 	defer res.Body.Close()
-	body, _ := io.ReadAll(res.Body)
+	body, _ = io.ReadAll(res.Body)
 
 	if res.StatusCode > 299 {
 		return model.PaymentResponse{}, errors.New(string(body))
@@ -146,18 +180,26 @@ func (p *paymentRepository) TrackingTransactionNotications(req model.TrackerTran
 			return err
 		}
 
-		dataJson, errDec := json.Marshal(dtoPayment)
-
-		if errDec != nil {
-			return errDec
-		}
-
 		if amount <= 10000 {
 			if dataAny != nil {
-				dtoPayment.ID = dataAny.(string)
+				var idUint = dataAny.([]uint8)
+				dtoPayment.ID = string(idUint)
 			}
+
+			dataJson, errDec := json.Marshal(dtoPayment)
+
+			if errDec != nil {
+				return errDec
+			}
+
 			request, errReq = http.NewRequest("PUT", "http://localhost:8888/api-klinik-gigi-vony-nur-santy/queues/reschedules", bytes.NewBuffer(dataJson))
 		} else {
+			dataJson, errDec := json.Marshal(dtoPayment)
+
+			if errDec != nil {
+				return errDec
+			}
+
 			request, errReq = http.NewRequest("POST", "http://localhost:8888/api-klinik-gigi-vony-nur-santy/queues", bytes.NewBuffer(dataJson))
 		}
 
@@ -310,11 +352,14 @@ func (p *paymentRepository) ViewPaymentbyUserId(userId, status string) (data []d
 	var args []interface{}
 	qry := "Select id, user_id, doctor_id, amount, order_id, status, to_stts, queue_date, queue_time, created_at From payment Where user_id=$1"
 	args = append(args, userId)
+
 	if status != "" {
 		qry += " AND status=$2"
 		args = append(args, status)
 	}
+
 	qry += " Order By created_at DESC"
+
 	rows, err := p.db.Query(qry, args...)
 	fmt.Println(qry)
 	if err != nil {
