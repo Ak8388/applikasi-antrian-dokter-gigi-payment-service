@@ -23,6 +23,7 @@ type PaymentRepository interface {
 	FindPaymentPaidByDate(date, userId string) bool
 	CancelPaymentUser(orderId string) error
 	ViewPaymentbyUserId(user, status string) (data []dto.PaymentViewDTO, err error)
+	FindPaymentByUserAndDate(userID, date string) (dto.PaymentViewDTO, error)
 }
 
 type paymentRepository struct {
@@ -378,6 +379,13 @@ func (p *paymentRepository) ViewPaymentbyUserId(userId, status string) (data []d
 		data = append(data, paymentDto)
 	}
 
+	return
+}
+
+func (p *paymentRepository) FindPaymentByUserAndDate(userID, date string) (payment dto.PaymentViewDTO, err error) {
+	qry := "Select id,amount from payment Where user_id=$1 AND queue_date=$2 AND status=$3"
+
+	err = p.db.QueryRow(qry, userID, date, "Paid").Scan(&payment.Id, &payment.Amount)
 	return
 }
 

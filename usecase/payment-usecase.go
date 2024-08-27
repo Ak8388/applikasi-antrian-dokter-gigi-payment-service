@@ -14,6 +14,7 @@ type PaymentUscase interface {
 	TrackingTransactionNotications(req model.TrackerTransaction) error
 	CancelPaymentUser(orderId string) error
 	ViewPaymentbyUserId(user, status string) (data []dto.PaymentViewDTO, err error)
+	FindPaymentByUserAndDate(userID, date string) (dto.PaymentViewDTO, error)
 }
 
 type paymentUsecase struct {
@@ -65,6 +66,10 @@ func (p *paymentUsecase) ViewPaymentbyUserId(user, status string) (data []dto.Pa
 	}
 
 	return p.repoPayment.ViewPaymentbyUserId(user, status)
+}
+
+func (p *paymentUsecase) FindPaymentByUserAndDate(userID, date string) (dto.PaymentViewDTO, error) {
+	return p.repoPayment.FindPaymentByUserAndDate(userID, date)
 }
 
 func NewPaymentUsecase(repoPayment repository.PaymentRepository) PaymentUscase {
