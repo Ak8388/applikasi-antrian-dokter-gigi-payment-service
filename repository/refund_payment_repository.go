@@ -23,9 +23,9 @@ type refundPaymentRepository struct {
 }
 
 func (r *refundPaymentRepository) CreateRefundPayment(refReq model.UserRefundPayment) error {
-	qry := "Insert Into refaund_payment (user_id, payment_id, bank_number, description, status, funds) Values($1, $2,$3 ,$4 ,$5 ,$6)"
+	qry := "Insert Into refaund_payment (user_id, payment_id, bank_name,bank_number, description, status, funds) Values($1, $2, $3 ,$4 ,$5 ,$6, $7)"
 
-	_, err := r.db.Exec(qry, refReq.UserID, refReq.PaymentId, refReq.BankNumber, refReq.Description, refReq.Status, refReq.Funds)
+	_, err := r.db.Exec(qry, refReq.UserID, refReq.PaymentId, refReq.BankName, refReq.BankNumber, refReq.Description, refReq.Status, refReq.Funds)
 
 	return err
 }
@@ -49,7 +49,7 @@ func (r *refundPaymentRepository) GetDataRefundPaymentForPatient(idUser, status 
 		qry += " AND status=$" + strconv.Itoa(index)
 		value = append(value, status)
 	}
-
+	qry += " Order By created_at DESC"
 	row, err := r.db.Query(qry, value...)
 
 	if err != nil {
@@ -58,7 +58,7 @@ func (r *refundPaymentRepository) GetDataRefundPaymentForPatient(idUser, status 
 
 	for row.Next() {
 		var userRefund model.UserRefundPayment
-		err = row.Scan(&userRefund.ID, &userRefund.UserID, &userRefund.PaymentId, &userRefund.BankName, &userRefund.BankNumber, &userRefund.Description, &userRefund.Status, &userRefund.Funds)
+		err = row.Scan(&userRefund.ID, &userRefund.UserID, &userRefund.PaymentId, &userRefund.BankName, &userRefund.BankNumber, &userRefund.Description, &userRefund.Status, &userRefund.Funds, &userRefund.CreatedAt, &userRefund.UpdatedAt)
 
 		if err != nil {
 			return nil, err
@@ -80,7 +80,7 @@ func (r *refundPaymentRepository) GetDataRefundPaymentForAdmin(status string) (d
 	} else {
 		qry = "Select * From refaund_payment"
 	}
-
+	qry += " Order By created_at DESC"
 	row, err := r.db.Query(qry, value...)
 
 	if err != nil {
@@ -89,8 +89,7 @@ func (r *refundPaymentRepository) GetDataRefundPaymentForAdmin(status string) (d
 
 	for row.Next() {
 		var userRefund model.UserRefundPayment
-		err = row.Scan(&userRefund.ID, &userRefund.UserID, &userRefund.PaymentId, &userRefund.BankNumber, &userRefund.Description, &userRefund.Status, &userRefund.Funds)
-
+		err = row.Scan(&userRefund.ID, &userRefund.UserID, &userRefund.PaymentId, &userRefund.BankName, &userRefund.BankNumber, &userRefund.Description, &userRefund.Status, &userRefund.Funds, &userRefund.CreatedAt, &userRefund.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +103,7 @@ func (r *refundPaymentRepository) GetDataRefundPaymentForAdmin(status string) (d
 func (r *refundPaymentRepository) GetRefundByID(id string) (userRefund model.UserRefundPayment, err error) {
 	qry := "Select * from refaund_payment Where id=$1"
 
-	err = r.db.QueryRow(qry, id).Scan(&userRefund.ID, &userRefund.UserID, &userRefund.PaymentId, &userRefund.BankNumber, &userRefund.Description, &userRefund.Status, &userRefund.Funds)
+	err = r.db.QueryRow(qry, id).Scan(&userRefund.ID, &userRefund.UserID, &userRefund.PaymentId, &userRefund.BankName, &userRefund.BankNumber, &userRefund.Description, &userRefund.Status, &userRefund.Funds, &userRefund.CreatedAt, &userRefund.UpdatedAt)
 
 	return
 }
@@ -118,9 +117,9 @@ func (r *refundPaymentRepository) DeleteDataRefund(id string) error {
 }
 
 func (r *refundPaymentRepository) ChangePayment(request dto.RefundPaymentChangeData) error {
-	qry := "Update refaund_payment Set bank_name=$1, bank_number=$2, description=$3 Where id=$4"
+	qry := "Update refaund_payment Set bank_name=$1, bank_number=$2 Where id=$3"
 
-	_, err := r.db.Exec(qry, request.BankName, request.BankNumber, request.Description, request.Id)
+	_, err := r.db.Exec(qry, request.BankName, request.BankNumber, request.Id)
 
 	return err
 }

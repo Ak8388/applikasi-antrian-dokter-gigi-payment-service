@@ -28,8 +28,8 @@ func (r *refaundPaymentUsecase) CreateRefundPayment(request model.UserRefundPaym
 		return errors.New("please enter the account number correctly")
 	}
 
-	if request.UserID == "" || request.PaymentId == "" {
-		return errors.New("user id and payment id can't be empty")
+	if request.UserID == "" {
+		return errors.New("user id can't be empty")
 	}
 
 	res, err := r.paymentUC.FindPaymentByUserAndDate(request.UserID, request.Date)
@@ -39,7 +39,7 @@ func (r *refaundPaymentUsecase) CreateRefundPayment(request model.UserRefundPaym
 	}
 
 	request.PaymentId = res.Id
-	feeDeduction = float64(res.Amount) * (3.0 / 100.0)
+	feeDeduction = float64(res.Amount) * (10.0 / 100.0)
 
 	request.Funds = int(res.Amount) - int(feeDeduction)
 
@@ -69,7 +69,7 @@ func (r *refaundPaymentUsecase) ChangeStatus(id, status string) error {
 		return errors.New("status invalid")
 	}
 
-	return r.ChangeStatus(id, status)
+	return r.refundPaymentRepo.ChangeStatus(id, status)
 }
 
 func (r *refaundPaymentUsecase) GetDataRefundPaymentForPatient(idUser, status string) ([]model.UserRefundPayment, error) {
@@ -95,7 +95,7 @@ func (r *refaundPaymentUsecase) DeleteDataRefund(id string) error {
 		return errors.New("refund payment not valid")
 	}
 
-	return r.DeleteDataRefund(id)
+	return r.refundPaymentRepo.DeleteDataRefund(id)
 }
 
 func (r *refaundPaymentUsecase) ChangePayment(request dto.RefundPaymentChangeData) error {
@@ -105,7 +105,7 @@ func (r *refaundPaymentUsecase) ChangePayment(request dto.RefundPaymentChangeDat
 		return errors.New("data not found")
 	}
 
-	return r.ChangePayment(request)
+	return r.refundPaymentRepo.ChangePayment(request)
 }
 
 func NewPaymentrefund(refundPaymentRepo repository.RefundPaymentRepository, paymentUC PaymentUscase) RefundPaymentUsecase {

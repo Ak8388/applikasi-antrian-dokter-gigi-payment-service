@@ -24,6 +24,8 @@ func (sr *serverRequirment) setUpController() {
 
 	// payment controller
 	controller.NewControllerPayment(am, sr.useM.PaymentUsecaseManager(), rg).PaymentRouter()
+	// refund controller
+	controller.NewPaymentRefund(am, sr.useM.RefundPaymentUsecase(), rg).RefundPaymentRouter()
 }
 
 func (sr *serverRequirment) Run() {
